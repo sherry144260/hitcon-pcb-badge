@@ -54,23 +54,23 @@ void MX_GPIO_Init(void)
                           |LedCd_Pin|LedCc_Pin|LedCb_Pin|LedCa_Pin
                           |LedA0_Pin|LedA1_Pin|LedA2_Pin|LedA3_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pin : PtPin */
+  /*Configure GPIO pin : IrRx_Pin */
   GPIO_InitStruct.Pin = IrRx_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   HAL_GPIO_Init(IrRx_GPIO_Port, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PAPin PAPin PAPin PAPin
-                           PAPin PAPin PAPin PAPin */
+  /*Configure GPIO pins : BtnB_Pin BtnC_Pin BtnD_Pin BtnE_Pin
+                           BtnF_Pin BtnG_Pin BtnH_Pin BtnA_Pin */
   GPIO_InitStruct.Pin = BtnB_Pin|BtnC_Pin|BtnD_Pin|BtnE_Pin
                           |BtnF_Pin|BtnG_Pin|BtnH_Pin|BtnA_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
   GPIO_InitStruct.Pull = GPIO_PULLUP;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
 
-  /*Configure GPIO pins : PBPin PBPin PBPin PBPin
-                           PBPin PBPin PBPin PBPin
-                           PBPin PBPin PBPin PBPin */
+  /*Configure GPIO pins : LedCh_Pin LedCg_Pin LedCf_Pin LedCe_Pin
+                           LedCd_Pin LedCc_Pin LedCb_Pin LedCa_Pin
+                           LedA0_Pin LedA1_Pin LedA2_Pin LedA3_Pin */
   GPIO_InitStruct.Pin = LedCh_Pin|LedCg_Pin|LedCf_Pin|LedCe_Pin
                           |LedCd_Pin|LedCc_Pin|LedCb_Pin|LedCa_Pin
                           |LedA0_Pin|LedA1_Pin|LedA2_Pin|LedA3_Pin;
