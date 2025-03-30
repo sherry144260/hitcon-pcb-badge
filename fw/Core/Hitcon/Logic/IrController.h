@@ -56,6 +56,8 @@ struct ProximityPacket {
 // This packet is from the badge, announcing its public key.
 struct PubAnnouncePacket {
   uint8_t pubkey[ECC_PUBKEY_SIZE];
+  // Signature from the Certificate Authority.
+  uint8_t sig[ECC_SIGNATURE_SIZE];
 };
 
 // This packet is sent from two parties that participated in an activity.
