@@ -68352,6 +68352,16 @@
 		(layer "Dwgs.User")
 		(uuid "fcbab1d7-0fd4-4b3b-9894-baa2de15415e")
 	)
+	(gr_line
+		(start 74 43)
+		(end 74.000002 45)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "0343785a-4270-4ea9-963e-0d51bd7a37bc")
+	)
 	(gr_arc
 		(start 139.000004 155.999999)
 		(mid 141 158)
@@ -68374,16 +68384,6 @@
 		(uuid "1f1f2a2d-82dd-4af6-80bc-39d7dac3e26e")
 	)
 	(gr_line
-		(start 89.000002 30)
-		(end 156.000002 30)
-		(stroke
-			(width 0.1)
-			(type default)
-		)
-		(layer "Edge.Cuts")
-		(uuid "2b965424-d4b8-4e88-ad98-fc0e8a4307da")
-	)
-	(gr_line
 		(start 74.000002 45)
 		(end 74.000002 162)
 		(stroke
@@ -68402,6 +68402,16 @@
 		)
 		(layer "Edge.Cuts")
 		(uuid "3e846740-73e5-4a1c-8cb2-3fbb95427280")
+	)
+	(gr_line
+		(start 156 28)
+		(end 89 28)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "4bc164c9-f771-44ad-a1fc-8a3a5e0b6ecc")
 	)
 	(gr_line
 		(start 131 160)
@@ -68467,6 +68477,16 @@
 		(uuid "afdb17ce-e05c-4c15-9b16-b8ef88b9ed8f")
 	)
 	(gr_line
+		(start 156.000002 30)
+		(end 156 28)
+		(stroke
+			(width 0.1)
+			(type default)
+		)
+		(layer "Edge.Cuts")
+		(uuid "bcd78088-0d61-45d1-8f4f-8975c8ad1f4c")
+	)
+	(gr_line
 		(start 74.000002 162)
 		(end 141.000002 162)
 		(stroke
@@ -68487,14 +68507,14 @@
 		(uuid "f22ec840-21aa-4770-9649-54f8dae73ec9")
 	)
 	(gr_line
-		(start 89.000002 30)
-		(end 74.000002 45)
+		(start 89 28)
+		(end 74 43)
 		(stroke
 			(width 0.1)
 			(type default)
 		)
 		(layer "Edge.Cuts")
-		(uuid "f5ec8ff2-f612-4c89-819c-846789173824")
+		(uuid "f8e3d3cd-178f-4069-9b9b-c2aec3716413")
 	)
 	(gr_text "git rev:\n--------\n"
 		(at 140 147 0)
