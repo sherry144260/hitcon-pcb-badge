@@ -4216,12 +4216,8 @@
 		(uuid "8c335456-b4bd-4fd3-a040-fafe71a67f60")
 	)
 	(no_connect
-		(at 121.92 87.63)
-		(uuid "a0b7c126-4f17-467d-ae0f-cbe3e517ee9d")
-	)
-	(no_connect
-		(at 189.23 163.83)
-		(uuid "a287ca17-a49d-4292-9644-1256cf1f67ea")
+		(at 121.92 82.55)
+		(uuid "9e713ebf-5543-49c0-a7d2-c520e1653b07")
 	)
 	(no_connect
 		(at 234.95 168.91)
@@ -4677,6 +4673,16 @@
 	)
 	(wire
 		(pts
+			(xy 105.41 87.63) (xy 121.92 87.63)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "2b322be3-2043-469d-bec7-5bca8b3ea00e")
+	)
+	(wire
+		(pts
 			(xy 44.45 107.95) (xy 44.45 99.06)
 		)
 		(stroke
@@ -4727,6 +4733,16 @@
 	)
 	(wire
 		(pts
+			(xy 189.23 163.83) (xy 187.96 163.83)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "33ebf72c-4682-488d-9b34-21eea7378294")
+	)
+	(wire
+		(pts
 			(xy 134.62 200.66) (xy 142.24 200.66)
 		)
 		(stroke
@@ -4754,6 +4770,16 @@
 			(type default)
 		)
 		(uuid "353a411f-4d59-41d9-93f4-6307ee49f446")
+	)
+	(wire
+		(pts
+			(xy 173.99 152.4) (xy 187.96 152.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "36b02163-9c2c-475d-a424-f477cd5720d2")
 	)
 	(wire
 		(pts
@@ -5514,6 +5540,16 @@
 			(type default)
 		)
 		(uuid "85a27d68-0c00-4f7b-aee9-d73fa5fec78d")
+	)
+	(wire
+		(pts
+			(xy 187.96 163.83) (xy 187.96 152.4)
+		)
+		(stroke
+			(width 0)
+			(type default)
+		)
+		(uuid "868715f3-d81c-4cc0-af96-ea4cef8789fa")
 	)
 	(wire
 		(pts
@@ -7042,6 +7078,16 @@
 		)
 		(uuid "0228220a-b0e6-4fcc-9153-d442fd343188")
 	)
+	(label "ACC_INT1"
+		(at 109.22 87.63 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "02dff0dd-895a-4a10-af07-8e3ed1b3a889")
+	)
 	(label "BTN_H"
 		(at 260.35 50.8 0)
 		(effects
@@ -7201,6 +7247,16 @@
 			(justify left bottom)
 		)
 		(uuid "5141ecae-f8b2-4779-8b78-a2dc94f8d5fd")
+	)
+	(label "ACC_INT1"
+		(at 176.53 152.4 0)
+		(effects
+			(font
+				(size 1.27 1.27)
+			)
+			(justify left bottom)
+		)
+		(uuid "53cd71ec-912b-44ad-a551-4bd1790a6b87")
 	)
 	(label "I2C1_SDA"
 		(at 236.22 156.21 0)
