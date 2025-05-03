@@ -2,8 +2,10 @@ from typing import Optional, AsyncIterator, Callable, Awaitable, Dict, ClassVar
 from bson import Binary
 from pymongo.asynchronous.database import AsyncDatabase
 from crypto_auth import CryptoAuth
+from ecc_utils import ECC_SIGNATURE_SIZE
 from schemas import IrPacket, IrPacketRequestSchema, IrPacketObject, Station, PacketType, PACKET_HASH_LEN, IR_USERNAME_LEN
 from config import Config
+from hashlib import sha3_256
 import struct
 import uuid
 import time
@@ -120,9 +122,9 @@ class PacketProcessor:
     # ===== Internal methods =====
     def packet_hash(self, ir_packet: IrPacketRequestSchema) -> bytes:
         """
-        Get the packet hash. TODO: This is a placeholder implementation and should be replaced with actual hashing logic.
+        Get the packet hash. The function will exclude the ECC signature from the hash.
         """
-        return bytes(ir_packet.data[-(PACKET_HASH_LEN):])
+        return sha3_256(ir_packet.data[:-(ECC_SIGNATURE_SIZE)]).digest()[:PACKET_HASH_LEN]
 
 
     async def handle_acknowledgment(self, ir_packet: IrPacketRequestSchema, station: Station) -> bool:
