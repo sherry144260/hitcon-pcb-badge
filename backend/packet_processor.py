@@ -7,6 +7,7 @@ from schemas import Event, ProximityEvent, PubAnnounceEvent, TwoBadgeActivityEve
 from schemas import IrPacket, IrPacketRequestSchema, IrPacketObject, Station, PacketType, PACKET_HASH_LEN, IR_USERNAME_LEN
 from config import Config
 from hashlib import sha3_256
+import inspect
 import uuid
 import time
 
@@ -23,11 +24,21 @@ class PacketProcessor:
 
 
     @staticmethod
-    def register_handler(type: PacketType, func: Callable[[IrPacket, Station], Awaitable[None]]) -> None:
+    def event_handler(func: Callable[[Event], Awaitable[None]]) -> None:
         """
         Register a handler for a specific packet type.
         """
-        PacketProcessor.packet_handlers[type] = func
+        # Get the event type from the function's signature.
+        signature = inspect.signature(func)
+        if "evt" not in signature.parameters:
+            raise ValueError("Function must have a parameter named 'evt'.")
+        event_type = signature.parameters["evt"].annotation
+
+        if not issubclass(event_type, Event):
+            raise ValueError("Function must accept an Event type as the first parameter.")
+        
+        # Register the function as a handler for the event type.
+        PacketProcessor.packet_handlers[event_type] = func
 
 
     # ===== Interface to HTTP =====
