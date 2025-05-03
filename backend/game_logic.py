@@ -1,5 +1,5 @@
 from packet_processor import PacketProcessor
-from schemas import ActivityEvent, ProximityEvent
+from schemas import ProximityEvent, PubAnnounceEvent, TwoBadgeActivityEvent, GameActivityEvent, SingleBadgeActivityEvent, SponsorActivityEvent
 from config import Config
 from pymongo.asynchronous.database import AsyncDatabase
 
@@ -14,9 +14,25 @@ class GameLogic:
 
 
     # ===== APIs for PacketProcessor =====
-    async def on_activity_event(evt: ActivityEvent):
+    async def on_single_badge_activity_event(evt: SingleBadgeActivityEvent):
+        pass
+
+
+    async def on_two_badge_activity_event(evt: TwoBadgeActivityEvent):
+        pass
+
+
+    async def on_game_activity_event(evt: GameActivityEvent):
+        pass
+
+
+    async def on_sponsor_activity_event(evt: SponsorActivityEvent):
         pass
 
 
     async def on_proximity_event(evt: ProximityEvent):
+        pass
+
+
+    async def on_pub_announce_event(evt: PubAnnounceEvent):
         pass
