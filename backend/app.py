@@ -3,7 +3,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from pymongo import AsyncMongoClient
 from packet_processor import PacketProcessor
 from crypto_auth import CryptoAuth
-from game_logic import GameLogic
+from game_logic_controller import GameLogic
 from config import Config
 from schemas import Station, IrPacketRequestSchema, Display, ScoreEntry
 
