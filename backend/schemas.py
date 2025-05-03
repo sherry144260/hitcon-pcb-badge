@@ -41,8 +41,10 @@ class PacketType(Enum):
     kAcknowledge = 3
     kProximity = 4
     kPubAnnounce = 5
-    kActivity = 6
+    kTwoBadgeActivity = 6
     kScoreAnnounce = 7
+    kSingleBadgeActivity = 8
+    kSponsorActivity = 9
 
 
 class IrPacket(BaseModel):
@@ -56,8 +58,25 @@ class IrPacket(BaseModel):
 
 # For http requests
 class IrPacketRequestSchema(BaseModel):
-    packet_id: Optional[uuid.UUID] = Field(None)
+    packet_id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4)
     data: List[int]
+
+
+class Display(BaseModel):
+    bar_1: str
+    bar_2: str
+    winning_color: str
+
+
+## Leaderboard
+class ScoreEntry(BaseModel):
+    name: str
+    uid: int
+    score: int
+
+
+class ScoreBoard(BaseModel):
+    scores: List[ScoreEntry]
 
 
 # For Mongo
@@ -69,24 +88,54 @@ class IrPacketObject(BaseModel):
     timestamp: int
 
 
-class ActivityEvent(BaseModel):
-    event_id: Optional[uuid.UUID] = Field(None)
+# === Events from Parsed packets ===
+class Event(BaseModel):
+    event_id: Optional[uuid.UUID] = Field(default_factory=uuid.uuid4)
+    packet_id: Optional[uuid.UUID] = Field(None)
+    station_id: Optional[uuid.UUID] = Field(None)
+
+
+class ProximityEvent(Event):
+    user: int
+    signature: int
+
+
+class PubAnnounceEvent(Event):
+    pubkey: int
+    signature: int
+
+
+# Converted from user packet
+class TwoBadgeActivityEvent(Event):
+    user1: int
+    user2: int
+    game_data: bytes
+    signature: int
+
+
+# Collected ActivityEvent from two users
+class GameActivityEvent(Event):
     packet_ids: List[uuid.UUID]
     players: List[int]
     signatures: List[int]
     game_data: bytes
 
 
-class ProximityEvent(BaseModel):
-    event_id: Optional[uuid.UUID] = Field(None)
+class ScoreAnnounceEvent(Event):
     user: int
-    signature: int
+    score: int
 
 
-class Display(BaseModel):
-    bar_1: str
-    bar_2: str
-    winning_color: str
+class SingleBadgeActivityEvent(Event):
+    user: int
+    event_type: int
+    event_data: bytes
+
+
+class SponsorActivityEvent(Event):
+    user: int
+    sponsor_id: int
+    sponsor_data: bytes
 
 
 # For Mongo collections `stations`
@@ -107,7 +156,7 @@ class Station(BaseModel):
 # For Mongo collections `users`
 class User(BaseModel):
     id: Optional[PyObjectId] = Field(alias="_id", default=None)
-    username: int
+    user: int
     pubkey: int
     # Tracking the last station the user was seen
     station_id: Optional[uuid.UUID] = Field(None)
@@ -129,12 +178,3 @@ class EccSignature(BaseModel):
 
 class EccPrivateKey(BaseModel):
     dA: int
-
-# leaderboard
-class ScoreEntry(BaseModel):
-    name: str
-    uid: int
-    score: int
-
-class ScoreBoard(BaseModel):
-    scores: List[ScoreEntry]
