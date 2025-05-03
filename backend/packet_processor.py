@@ -31,28 +31,28 @@ class PacketProcessor:
 
 
     # ===== Interface to HTTP =====
-    async def on_receive_packet(self, ir_packet: IrPacketRequestSchema, station: Station) -> None:
-        if await self.handle_acknowledgment(ir_packet, station):
+    async def on_receive_packet(self, ir_packet_schema: IrPacketRequestSchema, station: Station) -> None:
+        if await self.handle_acknowledgment(ir_packet_schema, station):
             # If the packet is an acknowledgment, we don't need to do anything else.
             return
 
-        packet = IrPacket(
-            packet_id=ir_packet.packet_id,
-            data=bytes(ir_packet.data),
+        ir_packet = IrPacket(
+            packet_id=ir_packet_schema.packet_id,
+            data=bytes(ir_packet_schema.data),
             station_id=station.station_id,
             to_stn=False
         )
 
         # verify the packet
         # it would throw an exception if the packet is invalid
-        await self.crypto_auth.verify_packet(packet)
+        await self.crypto_auth.verify_packet(ir_packet)
 
         if await self.handle_proximity(ir_packet):
             # If the packet is a proximity event, we don't need to do anything else.
             return
 
         hv = self.packet_hash(ir_packet)
-        db_packet = IrPacketObject(packet_id=ir_packet.packet_id, data=Binary(ir_packet.data), hash=Binary(hv))
+        db_packet = IrPacketObject(packet_id=ir_packet_schema.packet_id, data=Binary(ir_packet_schema.data), hash=Binary(hv))
 
         # add the packet to the database
         result = await self.packets.insert_one(
@@ -80,7 +80,7 @@ class PacketProcessor:
 
 
     # ===== Interface for GameLogic =====
-    async def send_packet_to_user(self, ir_packet: IrPacket, username: int) -> uuid.UUID:
+    async def send_packet_to_user(self, ir_packet: IrPacket, user: int) -> uuid.UUID:
         """
         Send a packet to a particular user. PacketProcessor will queue it for sending, and when activity from the given user is observed on a base station, packet will be directed to it.
         Will return immediately, and return the UUID of the packet.
@@ -91,7 +91,7 @@ class PacketProcessor:
         packet_id = ir_packet.packet_id or uuid.uuid4()
         ir_packet.packet_id = packet_id
         ir_packet.to_stn = True
-        ir_packet.station_id = await self.get_user_last_station_uuid(username)
+        ir_packet.station_id = await self.get_user_last_station_uuid(user)
 
         if ir_packet.station_id is None:
             # If the user is not associated with any station, TODO: put to user queue
@@ -156,11 +156,11 @@ class PacketProcessor:
         if packet_type == PacketType.kProximity:
             # Process proximity event
             offset = 1
-            username = int.from_bytes(ir_packet.data[offset:offset+IR_USERNAME_LEN], 'little', signed=False)
+            user = int.from_bytes(ir_packet.data[offset:offset+IR_USERNAME_LEN], 'little', signed=False)
 
             # update users' last station
             await self.users.update_one(
-                {"username": username},
+                {"user": user},
                 {"$set": {"station_id": station.station_id}}
             )
 
@@ -180,12 +180,12 @@ class PacketProcessor:
             return None
 
 
-    async def get_user_last_station_uuid(self, username: int) -> Optional[uuid.UUID]:
+    async def get_user_last_station_uuid(self, user: int) -> Optional[uuid.UUID]:
         # Get the station associated with a user.
         # Should deal with roaming or multiple stations.
         # If IR received from multiple stations in a short time, we should use consider the previous station.
         # If such time is passed between two packets, we should consider them as two different packets.
-        user = await self.users.find_one({"username": username})
+        user = await self.users.find_one({"user": user})
 
         if user:
             return user.get("station_id")
