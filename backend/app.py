@@ -13,11 +13,11 @@ db = mongo[config["mongo"]["db"]]
 stations = db["stations"]
 
 app = FastAPI()
-game_logic_instance = GameLogic(config=config)
 crypto_auth_instance = CryptoAuth(config=config)
 packet_processor_instance = PacketProcessor(
     config=config, crypto_auth=crypto_auth_instance, db=db
 )
+game_logic_instance = GameLogic(config=config, packet_processor=packet_processor_instance, db=db)
 
 router = APIRouter(prefix="/v1")
 security = HTTPBearer()
