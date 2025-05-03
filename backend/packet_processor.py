@@ -2,11 +2,11 @@ from typing import Optional, AsyncIterator, Callable, Awaitable, Dict, ClassVar
 from bson import Binary
 from pymongo.asynchronous.database import AsyncDatabase
 from crypto_auth import CryptoAuth
-from ecc_utils import ECC_SIGNATURE_SIZE
+from ecc_utils import ECC_SIGNATURE_SIZE, ECC_PUBKEY_SIZE
+from schemas import Event, ProximityEvent, PubAnnounceEvent, TwoBadgeActivityEvent, GameActivityEvent, ScoreAnnounceEvent, SingleBadgeActivityEvent, SponsorActivityEvent
 from schemas import IrPacket, IrPacketRequestSchema, IrPacketObject, Station, PacketType, PACKET_HASH_LEN, IR_USERNAME_LEN
 from config import Config
 from hashlib import sha3_256
-import struct
 import uuid
 import time
 
@@ -47,8 +47,9 @@ class PacketProcessor:
         # it would throw an exception if the packet is invalid
         await self.crypto_auth.verify_packet(ir_packet)
 
-        if await self.handle_proximity(ir_packet):
-            # If the packet is a proximity event, we don't need to do anything else.
+        event = self.parse_packet(ir_packet)
+        if event is None:
+            # If the packet is not a valid event, we don't need to do anything else.
             return
 
         hv = self.packet_hash(ir_packet)
@@ -67,6 +68,10 @@ class PacketProcessor:
         )
 
         # TODO: retransmit packets in the user queue (move these packets to station tx)
+
+
+        # TODO: handle the event
+        await PacketProcessor.packet_handlers.get(event.__class__, lambda x, y: None)(event, station)
 
 
     async def has_packet_for_tx(self, station: Station) -> AsyncIterator[IrPacketRequestSchema]:
@@ -120,7 +125,58 @@ class PacketProcessor:
 
 
     # ===== Internal methods =====
-    def packet_hash(self, ir_packet: IrPacketRequestSchema) -> bytes:
+    def parse_packet(self, ir_packet: IrPacket) -> Optional[Event]:
+        # parse against ir_packet.data using struct
+        packet_type = self.get_packet_type(ir_packet)
+        parsed_data = dict()
+        parsed_data["packet_id"] = ir_packet.packet_id
+        parsed_data["station_id"] = ir_packet.station_id
+        event = None
+        # ttl?
+        offset = 1
+
+        if packet_type == PacketType.kProximity:
+            # Proximity packet
+            parsed_data["user"] = int.from_bytes(ir_packet.data[offset:offset+IR_USERNAME_LEN], 'little', signed=False)
+            parsed_data["signature"] = int.from_bytes(ir_packet.data[offset+IR_USERNAME_LEN:offset+IR_USERNAME_LEN+ECC_SIGNATURE_SIZE], 'little', signed=False)
+            event = ProximityEvent(**parsed_data)
+        elif packet_type == PacketType.kPubAnnounce:
+            # Public announce packet
+            parsed_data["pubkey"] = int.from_bytes(ir_packet.data[offset:offset+ECC_PUBKEY_SIZE], 'little', signed=False)
+            parsed_data["signature"] = int.from_bytes(ir_packet.data[offset+ECC_PUBKEY_SIZE:offset+ECC_PUBKEY_SIZE+ECC_SIGNATURE_SIZE], 'little', signed=False)
+            event = PubAnnounceEvent(**parsed_data)
+        elif packet_type == PacketType.kTwoBadgeActivity:
+            # Two badge Activity packet
+            parsed_data["user1"] = int.from_bytes(ir_packet.data[offset:offset+IR_USERNAME_LEN], 'little', signed=False)
+            parsed_data["user2"] = int.from_bytes(ir_packet.data[offset+IR_USERNAME_LEN:offset+IR_USERNAME_LEN*2], 'little', signed=False)
+            parsed_data["game_data"] = ir_packet.data[offset+IR_USERNAME_LEN*2:offset+IR_USERNAME_LEN*2+5]
+            parsed_data["signature"] = int.from_bytes(ir_packet.data[offset+IR_USERNAME_LEN*2+5:offset+IR_USERNAME_LEN*2+5+ECC_SIGNATURE_SIZE], 'little', signed=False)
+            return TwoBadgeActivityEvent(**parsed_data)
+        elif packet_type == PacketType.kScoreAnnounce:
+            # Score announce packet
+            parsed_data["user"] = int.from_bytes(ir_packet.data[offset:offset+IR_USERNAME_LEN], 'little', signed=False)
+            parsed_data["score"] = int.from_bytes(ir_packet.data[offset+IR_USERNAME_LEN:offset+IR_USERNAME_LEN+4], 'little', signed=False)
+            return ScoreAnnounceEvent(**parsed_data)
+        elif packet_type == PacketType.kSingleBadgeActivity:
+            # Single badge activity packet
+            parsed_data["user"] = int.from_bytes(ir_packet.data[offset:offset+IR_USERNAME_LEN], 'little', signed=False)
+            parsed_data["event_type"] = int.from_bytes(ir_packet.data[offset+IR_USERNAME_LEN:offset+IR_USERNAME_LEN+1], 'little', signed=False)
+            parsed_data["event_data"] = ir_packet.data[offset+IR_USERNAME_LEN+1:offset+IR_USERNAME_LEN+1+3]
+            return SingleBadgeActivityEvent(**parsed_data)
+        elif packet_type == PacketType.kSponsorActivity:
+            # Sponsor activity packet
+            parsed_data["user"] = int.from_bytes(ir_packet.data[offset:offset+IR_USERNAME_LEN], 'little', signed=False)
+            parsed_data["sponsor_id"] = int.from_bytes(ir_packet.data[offset+IR_USERNAME_LEN:offset+IR_USERNAME_LEN+1], 'little', signed=False)
+            parsed_data["sponsor_data"] = ir_packet.data[offset+IR_USERNAME_LEN+1:offset+IR_USERNAME_LEN+1+9]
+            return SponsorActivityEvent(**parsed_data)
+        else:
+            # Unknown packet type
+            return None
+
+        return event
+
+
+    def packet_hash(self, ir_packet: IrPacket) -> bytes:
         """
         Get the packet hash. The function will exclude the ECC signature from the hash.
         """
