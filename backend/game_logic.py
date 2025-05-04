@@ -1,21 +1,25 @@
 import asyncio
-from dataclasses import dataclass
+from dataclasses import dataclass, fields
 from datetime import datetime, timedelta
 import pymongo
 
 
 @dataclass
 class Constants:
-    DATABASE_NAME = "game_logic"
-    ATTACK_HISTORY_COLLECTION = "attack_history"
+    DATABASE_NAME: str = "game_logic"
+    ATTACK_HISTORY_COLLECTION: str = "attack_history"
 
-    STATION_SCORE_LB = -1000
-    STATION_SCORE_UB = 1000
-    STATION_NEUTRAL_LB = -300
-    STATION_NEUTRAL_UB = 300
+    STATION_SCORE_LB: int = -1000
+    STATION_SCORE_UB: int = 1000
+    STATION_NEUTRAL_LB: int = -300
+    STATION_NEUTRAL_UB: int = 300
 
-    STATION_SCORE_DECAY_INTERVAL = 30 # seconds
-    STATION_SCORE_DECAY_AMOUNT = 10
+    STATION_SCORE_DECAY_INTERVAL: int = 30 # seconds
+    STATION_SCORE_DECAY_AMOUNT: int = 10
+
+    def reset(self):
+        for field in fields(self):
+            setattr(self, field.name, field.default)
 
 
 const = Constants()
@@ -98,6 +102,7 @@ class _GameLogic:
 
 
 async def test_station_score_history():
+    const.reset()
     const.STATION_SCORE_DECAY_INTERVAL = 1
     eps = 0.1
 
