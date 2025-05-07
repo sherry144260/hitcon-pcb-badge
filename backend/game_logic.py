@@ -94,21 +94,24 @@ class _GameLogic:
             "timestamp": timestamp,
         })
 
-    async def get_station_score_history(self, station_id: int, before: datetime = None):
+    async def get_station_score_history(self, *, player_id: int = None, station_id: int = None, before: datetime = None):
         if before is None:
             before = datetime.now()
 
-        cursor = self.attack_history.find(
-            {
-                "station_id": station_id,
-                "timestamp": {"$lt": before},
-            }
-        ).sort("timestamp", pymongo.ASCENDING)
+        query = {"timestamp": {"$lt": before}}
+
+        if player_id is not None:
+            query["player_id"] = player_id
+
+        if station_id is not None:
+            query["station_id"] = station_id
+
+        cursor = self.attack_history.find(query).sort("timestamp", pymongo.ASCENDING)
 
         async for record in cursor:
             yield record
 
-    async def get_station_score(self, station_id: int, before: datetime = None) -> int:
+    async def get_station_score(self, *, player_id: int = None, station_id: int = None, before: datetime = None) -> int:
         # TODO: cache the results
         if before is None:
             before = datetime.now()
@@ -124,7 +127,7 @@ class _GameLogic:
                 time_pointer += timedelta(seconds=const.STATION_SCORE_DECAY_INTERVAL)
                 total_score += -1 * sign(total_score) * min(const.STATION_SCORE_DECAY_AMOUNT, abs(total_score))
 
-        async for record in self.get_station_score_history(station_id, before):
+        async for record in self.get_station_score_history(player_id=player_id, station_id=station_id, before=before):
             proceed(record["timestamp"])
             total_score = clamp(total_score + record["amount"], const.STATION_SCORE_LB, const.STATION_SCORE_UB)
 
@@ -165,7 +168,7 @@ class _GameLogic:
             "timestamp": timestamp,
         })
 
-    async def get_game_history(self, *, player_id: int = None, station_id: int = None, game_type: GameType = None, before: datetime = None) -> int:
+    async def get_game_history(self, *, player_id: int = None, station_id: int = None, game_type: GameType = None, before: datetime = None):
         if before is None:
             before = datetime.now()
 
@@ -238,12 +241,12 @@ async def test_attack_station_score_history():
         elif total_score < 0:
             total_score = min(0, total_score + const.STATION_SCORE_DECAY_AMOUNT)
 
-        assert total_score == await gl.get_station_score(station_id, time_base + timedelta(seconds=i + eps))
+        assert total_score == await gl.get_station_score(station_id=station_id, before=time_base + timedelta(seconds=i + eps))
 
         # add the score
         total_score = clamp(total_score + scores[i], const.STATION_SCORE_LB, const.STATION_SCORE_UB)
 
-        assert total_score == await gl.get_station_score(station_id, time_base + timedelta(seconds=i + 0.5 + eps))
+        assert total_score == await gl.get_station_score(station_id=station_id, before=time_base + timedelta(seconds=i + 0.5 + eps))
 
     for i in range(len(scores), len(scores) + 10):
         # decay the score
@@ -252,7 +255,7 @@ async def test_attack_station_score_history():
         elif total_score < 0:
             total_score = min(0, total_score + const.STATION_SCORE_DECAY_AMOUNT)
 
-        assert total_score == await gl.get_station_score(station_id, time_base + timedelta(seconds=i + eps))
+        assert total_score == await gl.get_station_score(station_id=station_id, before=time_base + timedelta(seconds=i + eps))
 
 
 async def test_game_score_history():
