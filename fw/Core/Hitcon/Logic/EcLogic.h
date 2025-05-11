@@ -3,8 +3,12 @@
 #include <Service/Sched/Task.h>
 #include <Util/callback.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 namespace hitcon {
+
+constexpr size_t ECC_SIGNATURE_SIZE = 14;
+constexpr size_t ECC_PUBKEY_SIZE = 8;
 
 namespace ecc {
 
@@ -89,6 +93,24 @@ class EcLogic {
   void Init();
 
   /**
+   * Set the private key used by this class.
+   *
+   * @param privkey: The private key.
+   *
+   * Note that this will automatically start the computation of public key.
+   */
+  void SetPrivateKey(uint64_t privkey);
+
+  /**
+   * Store the public key into the buffer.
+   *
+   * @param buffer: The buffer, must be ECC_PUBKEY_SIZE bytes in size.
+   *
+   * @return If the key is copied in. False when it's not ready.
+   */
+  bool GetPublicKey(uint8_t *buffer);
+
+  /**
    * Start the signing process and mark this API as busy.
    * @param message: the message to sign. The contents should be intact until
    *                 sign finishes.
@@ -147,6 +169,17 @@ class EcLogic {
   uint32_t savedMessageLen;
 
   /**
+   * The private key.
+   */
+  uint64_t privateKey;
+
+  /**
+   * The public key.
+   */
+  uint8_t publicKey[ECC_PUBKEY_SIZE];
+  uint8_t publicKeyReady;
+
+  /**
    * Actual function to perform the sign.
    * Marks this API as not busy once the function returns.
    */
@@ -158,11 +191,17 @@ class EcLogic {
    */
   void doVerify(void *unused);
 
+  /**
+   * Compute the public key from private key.
+   */
+  void doDerivePublic(void *unused);
+
   callback_t callback;
   void *callback_arg1;
 
   service::sched::Task signTask;
   service::sched::Task verifyTask;
+  service::sched::Task derivePublicTask;
 };
 
 extern EcLogic g_ec_logic;
