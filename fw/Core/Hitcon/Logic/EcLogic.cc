@@ -2,6 +2,8 @@
 #include <Service/PerBoardData.h>
 #include <Service/Sched/Scheduler.h>
 
+#include <cstring>
+
 using namespace hitcon::service::sched;
 using namespace hitcon::ecc::internal;
 using namespace hitcon::ecc;
@@ -22,7 +24,6 @@ static const EcPoint g_generator({0x9a77dc33b36acc, 0xbcffb098340493},
                                  {0x279be90a95dbdd, 0xbcffb098340493});
 static const uint64_t g_curveOrder = 0xbcffb09c43733d;
 // TODO: use GetPerBoardSecret to set the private key
-static const uint64_t g_privateKey = 87;
 
 constexpr inline uint64_t modneg(const uint64_t x, const uint64_t m) {
   return m - (x % m);
@@ -227,6 +228,7 @@ bool EcLogic::StartVerify(uint8_t const *message, uint32_t len,
 }
 
 void EcLogic::doSign(void *unused) {
+  my_assert(privateKey != 0);  // Need to configure key first.
   uint64_t z = computeHash(savedMessage, savedMessageLen);
   ModNum r(0, g_curveOrder), s(0, g_curveOrder);
   while (s == 0) {
@@ -236,9 +238,9 @@ void EcLogic::doSign(void *unused) {
       EcPoint P = g_generator * k.val;
       r = P.xval();
     }
-    s = (z + g_privateKey * r) / k;
+    s = (z + privateKey * r) / k;
   }
-  tmpSignature.pub = g_generator * g_privateKey;
+  tmpSignature.pub = g_generator * privateKey;
   tmpSignature.r = r.val;
   tmpSignature.s = s.val;
   callback(callback_arg1, &tmpSignature);
@@ -268,13 +270,31 @@ void EcLogic::doVerify(void *unused) {
   busy = false;
 }
 
+void EcLogic::doDerivePublic(void *unused) {
+  // TODO
+}
+
+bool EcLogic::GetPublicKey(uint8_t *buffer) {
+  if (publicKeyReady) {
+    memcpy(buffer, publicKey, hitcon::ECC_PUBKEY_SIZE);
+    return true;
+  }
+  return false;
+}
 EcLogic::EcLogic()
-    : signTask(800, (task_callback_t)&EcLogic::doSign, (void *)&g_ec_logic),
-      verifyTask(800, (task_callback_t)&EcLogic::doVerify,
-                 (void *)&g_ec_logic) {}
+    : privateKey(0), publicKeyReady(0),
+      signTask(800, (task_callback_t)&EcLogic::doSign, (void *)this),
+      verifyTask(800, (task_callback_t)&EcLogic::doVerify, (void *)this),
+      derivePublicTask(900, (task_callback_t)&EcLogic::doDerivePublic,
+                       (void *)this) {}
 
 void EcLogic::Init() {
   // TODO: initialize the private key here maybe?
+}
+
+void EcLogic::SetPrivateKey(uint64_t privkey) {
+  privateKey = privkey;
+  privateKey = privateKey % g_curveOrder;
 }
 
 }  // namespace ecc

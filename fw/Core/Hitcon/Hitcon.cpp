@@ -15,6 +15,7 @@
 #include <Logic/DisplayLogic.h>
 #include <Logic/EcLogic.h>
 #include <Logic/EntropyHub.h>
+#include <Logic/GameController.h>
 #include <Logic/GameScore.h>
 #include <Logic/IrController.h>
 #include <Logic/IrLogic.h>
@@ -60,6 +61,7 @@ void hitcon_run() {
   g_fast_random_pool.Init();
   g_secure_random_pool.Init();
   g_ec_logic.Init();
+  g_game_controller.Init();
   g_game_score.Init();
   g_flash_service.Init();
   g_nv_storage.Init();
