@@ -36,13 +36,49 @@ async def get_station(credentials: HTTPAuthorizationCredentials = Security(secur
 async def read_root():
     return {"message": "Hello World"}
 
-#fake scores
-@app.get("/api/score", response_model=list[ScoreEntry])
+#Fake scores
+@app.get("/api/scores", response_model=list[ScoreEntry])
 async def get_fake_scores():
     return [
-        {"name": "tony", "uid": 101, "score": 9527},
-        {"name": "chen", "uid": 102, "score": 5566},
-        {"name": "sherry", "uid": 103, "score": 857}
+        {
+            "name": "tony",
+            "uid": 101,
+            "scores": {  
+                "shake_badge": 100,
+                "dino": 200,
+                "snake": 300,
+                "tetris": 400,
+                "connect_sponsor": 500,
+                "rectf": 600
+            },
+            "total_score": 2100
+        },
+        {
+            "name": "chen",
+            "uid": 102,
+            "scores": {
+                "shake_badge": 200,
+                "dino": 300,
+                "snake": 400,
+                "tetris": 500,
+                "connect_sponsor": 600,
+                "rectf": 700
+            },
+            "total_score": 2700
+        },
+        {
+            "name": "sherry",
+            "uid": 103,
+            "scores": {
+                "shake_badge": 300,
+                "dino": 400,
+                "snake": 500,
+                "tetris": 600,
+                "connect_sponsor": 700,
+                "rectf": 800
+            },
+            "total_score": 3300
+        }
     ]
 
 
