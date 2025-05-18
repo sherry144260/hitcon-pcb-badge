@@ -1,6 +1,5 @@
 from typing import Optional, AsyncIterator, Callable, Awaitable, Dict, ClassVar, Union
 from bson import Binary
-from pymongo.asynchronous.database import AsyncDatabase
 from crypto_auth import CryptoAuth
 from ecc_utils import ECC_SIGNATURE_SIZE, ECC_PUBKEY_SIZE
 from schemas import Event, ProximityEvent, PubAnnounceEvent, TwoBadgeActivityEvent, GameActivityEvent, ScoreAnnounceEvent, SingleBadgeActivityEvent, SponsorActivityEvent
@@ -13,6 +12,7 @@ import uuid
 import time
 from io import BytesIO
 
+from game_logic_controller import GameLogic
 
 class PacketProcessor:
     packet_handlers: ClassVar[Dict[type[Event], Callable[[Event], Awaitable[None]]]] = dict()
@@ -23,6 +23,11 @@ class PacketProcessor:
         self.packets = db["packets"]
         self.users = db["users"]
         self.user_queue = db["user_queue"]
+
+        for k, v in GameLogic.__dict__.items():
+            if k.startswith("on_") and isinstance(v, staticmethod):
+                # Register the static method as an event handler
+                PacketProcessor.event_handler(v.__func__)
 
 
     @staticmethod
