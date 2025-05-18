@@ -7,6 +7,7 @@ from schemas import Event, ProximityEvent, PubAnnounceEvent, TwoBadgeActivityEve
 from schemas import IrPacket, IrPacketRequestSchema, IrPacketObject, Station, PacketType, PACKET_HASH_LEN, IR_USERNAME_LEN
 from config import Config
 from hashlib import sha3_256
+from database import db
 import inspect
 import uuid
 import time
@@ -14,10 +15,8 @@ import time
 class PacketProcessor:
     packet_handlers: ClassVar[Dict[type[Event], Callable[[Event], Awaitable[None]]]] = dict()
 
-    def __init__(self, config: Config, crypto_auth: CryptoAuth, db: AsyncDatabase):
-        self.crypto_auth = crypto_auth
+    def __init__(self, config: Config):
         self.config = config
-        self.db = db
         self.stations = db["stations"]
         self.packets = db["packets"]
         self.users = db["users"]
@@ -59,7 +58,7 @@ class PacketProcessor:
 
         # verify the packet
         # it would throw an exception if the packet is invalid
-        await self.crypto_auth.verify_packet(ir_packet)
+        await CryptoAuth.verify_packet(ir_packet)
 
         event = self.parse_packet(ir_packet)
         if event is None:

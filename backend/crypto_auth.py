@@ -1,6 +1,6 @@
 from typing import Optional
 from schemas import IrPacket
-from config import Config
+from database import db
 from ecc_utils import ecc_sign, ecc_verify
 
 
@@ -10,10 +10,6 @@ class UnsignedPacketError(Exception):
 
 # This module is responsible for verifying & signing the packets
 class CryptoAuth:
-    def __init__(self, config: Config):
-        self.config = config
-
-
     # ===== Generic methods for any other layers =====
     @staticmethod
     async def get_pubkey_by_username(username: int) -> Optional[int]:

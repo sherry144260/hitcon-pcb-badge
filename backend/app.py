@@ -1,23 +1,15 @@
 from fastapi import FastAPI, APIRouter, Depends, Security, HTTPException
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
-from pymongo import AsyncMongoClient
 from packet_processor import PacketProcessor
-from crypto_auth import CryptoAuth
-from game_logic_controller import GameLogic
 from config import Config
-from schemas import Station, IrPacketRequestSchema, Display, ScoreEntry
+from database import db
 
 config = Config("config.yaml")
-mongo = AsyncMongoClient(f"mongodb://{config['mongo']['username']}:{config['mongo']['password']}@{config['mongo']['host']}:{config['mongo']['port']}?uuidRepresentation=standard")
-db = mongo[config["mongo"]["db"]]
+
 stations = db["stations"]
 
 app = FastAPI()
-crypto_auth_instance = CryptoAuth(config=config)
-packet_processor_instance = PacketProcessor(
-    config=config, crypto_auth=crypto_auth_instance, db=db
-)
-game_logic_instance = GameLogic(config=config, packet_processor=packet_processor_instance, db=db)
+packet_processor_instance = PacketProcessor(config=config)
 
 router = APIRouter(prefix="/v1")
 security = HTTPBearer()
