@@ -69,7 +69,6 @@ class PacketProcessor:
 
         # add the packet to the database
         result = await self.packets.insert_one(
-            {"station_id": station.station_id},
             {"$push": {"rx": db_packet.model_dump()}}
         )
 
