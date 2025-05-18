@@ -3,6 +3,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from packet_processor import PacketProcessor
 from config import Config
 from database import db
+import game_logic_controller
 
 config = Config("config.yaml")
 
