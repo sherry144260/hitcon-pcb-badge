@@ -12,7 +12,7 @@ import uuid
 import time
 
 class PacketProcessor:
-    packet_handlers: ClassVar[Dict[PacketType, Callable[[IrPacket, Station], Awaitable[None]]]] = dict()
+    packet_handlers: ClassVar[Dict[type[Event], Callable[[Event], Awaitable[None]]]] = dict()
 
     def __init__(self, config: Config, crypto_auth: CryptoAuth, db: AsyncDatabase):
         self.crypto_auth = crypto_auth
@@ -25,7 +25,7 @@ class PacketProcessor:
 
 
     @staticmethod
-    def event_handler(func: Callable[[Event], Awaitable[None]]) -> None:
+    def event_handler(func: Callable):
         """
         Register a handler for a specific packet type.
         """
@@ -65,7 +65,7 @@ class PacketProcessor:
             return
 
         hv = self.packet_hash(ir_packet)
-        db_packet = IrPacketObject(packet_id=ir_packet_schema.packet_id, data=Binary(ir_packet_schema.data), hash=Binary(hv))
+        db_packet = IrPacketObject(packet_id=ir_packet_schema.packet_id, data=Binary(bytes(ir_packet_schema.data)), hash=Binary(hv))
 
         # add the packet to the database
         result = await self.packets.insert_one(
@@ -226,11 +226,12 @@ class PacketProcessor:
         return event
 
 
-    def packet_hash(self, ir_packet: IrPacket) -> bytes:
+    def packet_hash(self, ir_packet: Union[IrPacket, IrPacketRequestSchema]) -> bytes:
         """
         Get the packet hash. The function will exclude the ECC signature from the hash.
         """
-        return sha3_256(ir_packet.data[:-(ECC_SIGNATURE_SIZE)]).digest()[:PACKET_HASH_LEN]
+        data = bytes(ir_packet.data[:-(ECC_SIGNATURE_SIZE)])
+        return sha3_256(data).digest()[:PACKET_HASH_LEN]
 
 
     async def handle_acknowledgment(self, ir_packet: IrPacketRequestSchema, station: Station) -> bool:
@@ -291,9 +292,9 @@ class PacketProcessor:
         # Should deal with roaming or multiple stations.
         # If IR received from multiple stations in a short time, we should use consider the previous station.
         # If such time is passed between two packets, we should consider them as two different packets.
-        user = await self.users.find_one({"user": user})
-
-        if user:
-            return user.get("station_id")
+        user_object = await self.users.find_one({"user": user})
+    
+        if user_object:
+            return user_object.get("station_id")
         else:
             return None
