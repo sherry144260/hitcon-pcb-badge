@@ -5,6 +5,7 @@ from bson import ObjectId
 from typing import Annotated
 from enum import Enum
 import uuid
+import time
 from typing import Dict
 
 class _ObjectIdPydanticAnnotation:
@@ -87,7 +88,7 @@ class IrPacketObject(BaseModel):
     packet_id: Optional[uuid.UUID] = Field(None)
     data: PyBinary
     hash: PyBinary
-    timestamp: int
+    timestamp: Optional[float] = Field(default_factory=time.time)
 
 
 # === Events from Parsed packets ===
@@ -99,6 +100,8 @@ class Event(BaseModel):
 
 class ProximityEvent(Event):
     user: int
+    power: int
+    nonce: int
     signature: int
 
 
