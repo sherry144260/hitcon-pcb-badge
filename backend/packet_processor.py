@@ -188,7 +188,9 @@ class PacketProcessor:
         if packet_type == PacketType.kProximity:
             # Proximity packet
             parsed_data["user"] = int.from_bytes(ir_packet.data[offset:offset+IR_USERNAME_LEN], 'little', signed=False)
-            parsed_data["signature"] = int.from_bytes(ir_packet.data[offset+IR_USERNAME_LEN:offset+IR_USERNAME_LEN+ECC_SIGNATURE_SIZE], 'little', signed=False)
+            parsed_data["power"] = int.from_bytes(ir_packet.data[offset+IR_USERNAME_LEN:offset+IR_USERNAME_LEN+1], 'little', signed=False)
+            parsed_data["nonce"] = int.from_bytes(ir_packet.data[offset+IR_USERNAME_LEN+1:offset+IR_USERNAME_LEN+1+2], 'little', signed=False)
+            parsed_data["signature"] = int.from_bytes(ir_packet.data[offset+IR_USERNAME_LEN+1+2:offset+IR_USERNAME_LEN+1+2+ECC_SIGNATURE_SIZE], 'little', signed=False) 
             event = ProximityEvent(**parsed_data)
         elif packet_type == PacketType.kPubAnnounce:
             # Public announce packet
