@@ -15,11 +15,13 @@ class CryptoAuth:
 
 
     # ===== Generic methods for any other layers =====
+    @staticmethod
     async def get_pubkey_by_username(username: int) -> Optional[int]:
         pass
 
 
     # ===== APIs for PacketProcessor =====
+    @staticmethod
     async def verify_packet(ir_packet: IrPacket) -> Optional[int]:
         """
         Verify the packet. Throws an exception if the packet is invalid.
