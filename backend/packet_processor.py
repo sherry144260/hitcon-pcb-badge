@@ -41,6 +41,8 @@ class PacketProcessor:
         # Register the function as a handler for the event type.
         PacketProcessor.packet_handlers[event_type] = func
 
+        return func
+
 
     # ===== Interface to HTTP =====
     async def on_receive_packet(self, ir_packet_schema: IrPacketRequestSchema, station: Station) -> None:
@@ -82,7 +84,7 @@ class PacketProcessor:
 
 
         # TODO: handle the event
-        await PacketProcessor.packet_handlers.get(event.__class__, lambda x, y: None)(event, station)
+        await PacketProcessor.packet_handlers[event.__class__](event)
 
 
     async def has_packet_for_tx(self, station: Station) -> AsyncIterator[IrPacketRequestSchema]:
