@@ -252,7 +252,7 @@ class PacketProcessor:
         # This is where we would update the database or perform any other necessary actions.
         packet_type = self.get_packet_type(ir_packet)
         if packet_type == PacketType.kAcknowledge:
-            hv = self.packet_hash(ir_packet)
+            hv = ir_packet.data[1:1+PACKET_HASH_LEN]
 
             # Acknowledge the packet and remove it from the tx list.
             packets = await self.packets.find({"hash": hv}).to_list()
