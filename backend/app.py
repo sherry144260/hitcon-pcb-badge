@@ -102,7 +102,14 @@ async def rx(ir_packet: IrPacketRequestSchema, station: Station = Depends(get_st
 
 @router.get("/station-display")
 async def station_display(station: Station = Depends(get_station)) -> Display:
-    pass
+    return station.display
+
+
+@router.get("/station-score")
+async def get_history(station: Station = Depends(get_station)):
+    # Fetch the history of packets for the station
+    history = await GameLogicController.get_station_score(station.station_id)
+    return history
 
 
 app.include_router(router)
