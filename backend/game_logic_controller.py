@@ -26,10 +26,14 @@ class GameLogicController:
             case _:
                 raise ValueError(f"Unknown game type: {evt.event_type}")
 
+        # Parse score from event data
+        score = int.from_bytes(evt.event_data, 'big')
+        score = (score & 0xFFF000) >> 12  # Extract the score from the event data
+
         await game.receive_game_score(
             player_id=evt.user,
             station_id=evt.station_id,
-            event_data=evt.event_data,
+            score=score,
             game_type=game_type,
             timestamp=evt.timestamp
         )
