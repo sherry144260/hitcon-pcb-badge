@@ -124,7 +124,12 @@ class TwoBadgeActivityEvent(Event):
 # Collected ActivityEvent from two users
 class GameActivityEvent(Event):
     packet_ids: List[uuid.UUID]
-    players: List[int]
+    user1: int
+    game_type_str: str
+    user2: int
+    score1: int
+    score2: int
+    nonce: int
     signatures: List[int]
     game_data: bytes
 
