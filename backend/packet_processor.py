@@ -14,7 +14,7 @@ from io import BytesIO
 from game_logic_controller import GameLogicController
 
 class PacketProcessor:
-    packet_handlers: ClassVar[Dict[type[Event], Callable[[Event], Awaitable[Union[None, int]]]]] = dict()
+    packet_handlers: ClassVar[Dict[type[Event], Callable[[Event], Awaitable[tuple[Union[None, int], bool]]]]] = dict()
 
     def __init__(self, config: Config):
         self.config = config
@@ -64,6 +64,8 @@ class PacketProcessor:
 
         # verify the packet
         # it would throw an exception if the packet is invalid
+        # TODO: add user to the packet if it passed verification
+        # Maybe a new field in IrPacket?
         await CryptoAuth.verify_packet(ir_packet)
 
         event = self.parse_packet(ir_packet)
@@ -86,7 +88,7 @@ class PacketProcessor:
         )
 
         # handle the event
-        user = await PacketProcessor.packet_handlers[event.__class__](event)
+        user, ack = await PacketProcessor.packet_handlers[event.__class__](event, self)
 
         # retransmit packets in the user queue (move these packets to station tx)
         if user is not None:
@@ -109,6 +111,10 @@ class PacketProcessor:
             {"$pull": {"rx": result.inserted_id}}
         )
         await self.packets.delete_one({"_id": result.inserted_id})
+
+        if ack:
+            # TODO: If need to acknowledge the packet, we will send an acknowledgment packet.
+            pass
 
 
     async def has_packet_for_tx(self, station: Station) -> AsyncIterator[IrPacketRequestSchema]:

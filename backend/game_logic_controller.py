@@ -30,6 +30,8 @@ class GameLogicController:
         score = int.from_bytes(evt.event_data, 'big')
         score = (score & 0xFFF000) >> 12  # Extract the score from the event data
 
+        # TODO: check nonce
+
         await game.receive_game_score_single_player(
             player_id=evt.user,
             station_id=evt.station_id,
@@ -38,7 +40,7 @@ class GameLogicController:
             timestamp=evt.timestamp
         )
 
-        return evt.user
+        return evt.user, True
 
 
     @staticmethod
