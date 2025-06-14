@@ -85,4 +85,4 @@ class GameLogicController:
 
     @staticmethod
     async def get_station_score(station_id: uuid.UUID):
-        return await game.get_station_score(station_id)
+        return await game.get_station_score(station_id=station_id)
