@@ -150,10 +150,15 @@ class GameLogicController:
 
     @staticmethod
     async def on_pub_announce_event(evt: PubAnnounceEvent):
-        print(f"Pub announce event: {evt.pubkey.hex()}")
-        print(f"Signature: {evt.signature.hex()}")
+        print(f"Pub announce event: {hex(evt.pubkey)}")
+        print(f"Signature: {hex(evt.signature)}")
         # station <--> user has been recorded by the PacketProcessor
-        pass
+        result = db["users"].find_one({"pubkey": evt.pubkey})  # Ensure user exists
+
+        if result:
+            return result["user"], True
+        else:
+            return None, False
 
 
     @staticmethod
