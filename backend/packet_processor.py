@@ -245,7 +245,8 @@ class PacketProcessor:
                 # Score announce packet
                 user = b2i(buf.read(IR_USERNAME_LEN))
                 score = b2i(buf.read(4))
-                return ScoreAnnounceEvent(packet_id=packet_id, station_id=station_id, user=user, score=score)
+                signature = b2i(buf.read(ECC_SIGNATURE_SIZE))
+                return ScoreAnnounceEvent(packet_id=packet_id, station_id=station_id, user=user, score=score, signature=signature)
 
             case PacketType.kSingleBadgeActivity:
                 # Single badge activity packet

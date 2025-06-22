@@ -138,6 +138,7 @@ class GameActivityEvent(Event):
 class ScoreAnnounceEvent(Event):
     user: int
     score: int
+    signature: int
 
 
 class SingleBadgeActivityEvent(Event):
