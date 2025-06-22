@@ -1,6 +1,6 @@
 from typing import Optional, AsyncIterator, Callable, Awaitable, Dict, ClassVar, Union
 from bson import Binary
-from crypto_auth import CryptoAuth
+from crypto_auth import CryptoAuth, UnsignedPacketError
 from ecc_utils import ECC_SIGNATURE_SIZE, ECC_PUBKEY_SIZE
 from schemas import Event, ProximityEvent, PubAnnounceEvent, TwoBadgeActivityEvent, GameActivityEvent, ScoreAnnounceEvent, SingleBadgeActivityEvent, SponsorActivityEvent
 from schemas import IrPacket, IrPacketRequestSchema, IrPacketObject, Station, PacketType, PACKET_HASH_LEN, IR_USERNAME_LEN
