@@ -3,7 +3,7 @@ from bson import Binary
 from crypto_auth import CryptoAuth, UnsignedPacketError
 from ecc_utils import ECC_SIGNATURE_SIZE, ECC_PUBKEY_SIZE
 from schemas import Event, ProximityEvent, PubAnnounceEvent, TwoBadgeActivityEvent, GameActivityEvent, ScoreAnnounceEvent, SingleBadgeActivityEvent, SponsorActivityEvent
-from schemas import IrPacket, IrPacketRequestSchema, IrPacketObject, Station, PacketType, PACKET_HASH_LEN, IR_USERNAME_LEN
+from schemas import IrPacket, IrPacketRequestSchema, IrPacketObject, Station, PacketType, PACKET_HASH_LEN, IR_USERNAME_LEN, PACKET_TYPE_WITHOUT_SIG
 from config import Config
 from hashlib import sha3_256
 from database import db
@@ -270,7 +270,12 @@ class PacketProcessor:
         """
         Get the packet hash. The function will exclude the ECC signature from the hash.
         """
-        data = bytes(ir_packet.data[:-(ECC_SIGNATURE_SIZE)])
+        packet_type = self.get_packet_type(ir_packet)
+        if packet_type in PACKET_TYPE_WITHOUT_SIG:
+            data = bytes(ir_packet.data)
+        else:
+            data = bytes(ir_packet.data[:-(ECC_SIGNATURE_SIZE)])
+
         return sha3_256(data).digest()[:PACKET_HASH_LEN]
 
 
