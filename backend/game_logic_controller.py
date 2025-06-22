@@ -5,8 +5,6 @@ import uuid
 
 game = GameLogic(mongo)
 
-# TODO: ack
-
 class GameLogicController:
     # ===== APIs for PacketProcessor =====
     @staticmethod
@@ -41,8 +39,6 @@ class GameLogicController:
             game_type=game_type,
             timestamp=evt.timestamp
         )
-
-        return evt.user, True
 
 
     @staticmethod
@@ -113,9 +109,6 @@ class GameLogicController:
                 "signature": evt.signature
             })
 
-        # TODO: return the right user
-        return evt.user1, True
-
 
     @staticmethod
     async def on_game_activity_event(evt: GameActivityEvent):
@@ -145,8 +138,6 @@ class GameLogicController:
             timestamp=evt.timestamp
         )
 
-        return evt.user
-
 
     @staticmethod
     async def on_pub_announce_event(evt: PubAnnounceEvent):
@@ -154,11 +145,6 @@ class GameLogicController:
         print(f"Signature: {hex(evt.signature)}")
         # station <--> user has been recorded by the PacketProcessor
         result = db["users"].find_one({"pubkey": evt.pubkey})  # Ensure user exists
-
-        if result:
-            return result["user"], True
-        else:
-            return None, False
 
 
     @staticmethod

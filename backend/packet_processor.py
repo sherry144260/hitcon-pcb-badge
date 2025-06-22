@@ -14,7 +14,7 @@ from io import BytesIO
 from game_logic_controller import GameLogicController
 
 class PacketProcessor:
-    packet_handlers: ClassVar[Dict[type[Event], Callable[[Event], Awaitable[tuple[Union[None, int], bool]]]]] = dict()
+    packet_handlers: ClassVar[Dict[type[Event], Callable[[Event], Awaitable[None]]]] = dict()
 
     def __init__(self, config: Config):
         self.config = config
@@ -64,57 +64,59 @@ class PacketProcessor:
 
         # verify the packet
         # it would throw an exception if the packet is invalid
-        # TODO: add user to the packet if it passed verification
         # Maybe a new field in IrPacket?
-        await CryptoAuth.verify_packet(ir_packet)
+        user = await CryptoAuth.verify_packet(event, ir_packet, hv)
 
         event = self.parse_packet(ir_packet)
-        if event is None:
-            # If the packet is not a valid event, we don't need to do anything else.
-            return
-
         hv = self.packet_hash(ir_packet)
-        db_packet = IrPacketObject(packet_id=ir_packet_schema.packet_id, data=Binary(bytes(ir_packet_schema.data)), hash=Binary(hv))
 
-        # add the packet to the database
-        result = await self.packets.insert_one(
-            {"$push": {"rx": db_packet.model_dump()}}
-        )
+        try:
+            if event is None:
+                # If the packet is not a valid event, we don't need to do anything else.
+                return
 
-        # add packet ObjectId to station rx list
-        await self.stations.update_one(
-            {"station_id": station.station_id},
-            {"$push": {"rx": result.inserted_id}}
-        )
+            db_packet = IrPacketObject(packet_id=ir_packet_schema.packet_id, data=Binary(bytes(ir_packet_schema.data)), hash=Binary(hv))
 
-        # handle the event
-        user, ack = await PacketProcessor.packet_handlers[event.__class__](event, self)
-
-        # retransmit packets in the user queue (move these packets to station tx)
-        if user is not None:
-            # Associate the user with the station.
-            await self.users.update_one(
-                {"user": user},
-                {"$set": {"station_id": station.station_id}}
+            # add the packet to the database
+            result = await self.packets.insert_one(
+                {"$push": {"rx": db_packet.model_dump()}}
             )
-            # Dequeue packets for the user and add them to the station tx list.
-            packet_ids = await self.deque_user_packets(user, station)
-            if packet_ids:
-                await self.stations.update_one(
-                    {"station_id": station.station_id},
-                    {"$push": {"tx": {"$each": packet_ids}}}
+
+            # add packet ObjectId to station rx list
+            await self.stations.update_one(
+                {"station_id": station.station_id},
+                {"$push": {"rx": result.inserted_id}}
+            )
+
+            # handle the event
+            await PacketProcessor.packet_handlers[event.__class__](event, self)
+
+            # retransmit packets in the user queue (move these packets to station tx)
+            if user is not None:
+                # Associate the user with the station.
+                await self.users.update_one(
+                    {"user": user},
+                    {"$set": {"station_id": station.station_id}}
                 )
+                # Dequeue packets for the user and add them to the station tx list.
+                packet_ids = await self.deque_user_packets(user, station)
+                if packet_ids:
+                    await self.stations.update_one(
+                        {"station_id": station.station_id},
+                        {"$push": {"tx": {"$each": packet_ids}}}
+                    )
 
-        # remove processed packets from the database
-        await self.stations.update_one(
-            {"station_id": station.station_id},
-            {"$pull": {"rx": result.inserted_id}}
-        )
-        await self.packets.delete_one({"_id": result.inserted_id})
-
-        if ack:
-            # TODO: If need to acknowledge the packet, we will send an acknowledgment packet.
-            pass
+            # remove processed packets from the database
+            await self.stations.update_one(
+                {"station_id": station.station_id},
+                {"$pull": {"rx": result.inserted_id}}
+            )
+            await self.packets.delete_one({"_id": result.inserted_id})
+        except UnsignedPacketError as e:
+            print(f"Invalid packet received: {e}")
+        finally:
+            # Always send an acknowledgment packet.
+            await self.ack(ir_packet_schema, station)
 
 
     async def has_packet_for_tx(self, station: Station) -> AsyncIterator[IrPacketRequestSchema]:
@@ -294,24 +296,14 @@ class PacketProcessor:
         return False
 
 
-    async def handle_proximity(self, ir_packet: IrPacketRequestSchema, station: Station) -> bool:
-        # Handle proximity packets.
-        # This is where we would update the database or perform any other necessary actions.
-        packet_type = self.get_packet_type(ir_packet)
-        if packet_type == PacketType.kProximity:
-            # Process proximity event
-            offset = 1
-            user = int.from_bytes(ir_packet.data[offset:offset+IR_USERNAME_LEN], 'little', signed=False)
-
-            # update users' last station
-            await self.users.update_one(
-                {"user": user},
-                {"$set": {"station_id": station.station_id}}
-            )
-
-            return True
-
-        return False
+    async def ack(self, ir_packet: IrPacketRequestSchema, station: Station) -> None:
+        # Send an acknowledgment packet to the base station.
+        ack_packet = IrPacket(
+            data=b"\x00" + PacketType.kAcknowledge.value.to_bytes(1, 'big') + self.packet_hash(ir_packet),
+            station_id=station.station_id,
+            to_stn=False
+        )
+        await self.send_packet_to_station(ack_packet)
 
 
     def get_packet_type(self, ir_packet: Union[IrPacket, IrPacketRequestSchema]) -> Optional[PacketType]:
