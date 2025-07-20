@@ -21,13 +21,14 @@ using hitcon::app::tetris::tetris_app;
 
 constexpr menu_entry_t main_menu_entries[] = {
     // TODO : change app
-    {"BadUSB", &hitcon::usb::bad_usb_app, nullptr},
+    {"Tama", &tama_app, &hitcon::app::tama::SetSingleplayer},
     {"Snake", &snake_app, &hitcon::app::snake::SetSingleplayer},
-    {"Dino", &dino_app, nullptr},
     {"Tetris", &tetris_app, &hitcon::app::tetris::SetSingleplayer},
+    {"Dino", &dino_app, nullptr},
     {"Show Scores", &score_hist::g_score_hist, nullptr},
     {"Bouncing DVD", &bouncing_dvd_app, nullptr},
     {"Tama", &tama_app, &hitcon::app::tama::SetSingleplayer},
+    {"BadUSB", &hitcon::usb::bad_usb_app, nullptr},
     {"Debug", &g_debug_app, nullptr}};
 
 constexpr int main_menu_entries_len =
