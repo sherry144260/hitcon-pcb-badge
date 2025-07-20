@@ -14,6 +14,7 @@ enum EventType : uint8_t {
   kSnake = 1,
   kTetris = 2,
   kDino = 3,
+  kTama = 4,
   kShake = 16
 };
 
